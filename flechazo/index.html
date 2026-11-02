@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html lang="es" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FLECHAZO - Club de Solteros</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="tailwind-config.js"></script>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,300;0,400;0,600;0,800;0,900;1,400&family=Playfair+Display:ital,wght@0,600;0,800;1,600&display=swap" rel="stylesheet">
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Estilos Personalizados -->
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body class="bg-flechazo-dark text-gray-100 font-sans min-h-screen flex flex-col justify-between selection:bg-flechazo-red selection:text-white relative overflow-x-hidden">
+
+    <!-- CANVAS CORAZONES EN FONDO -->
+    <canvas id="bgCanvas" class="fixed top-0 left-0 w-full h-full pointer-events-none z-0 opacity-40"></canvas>
+
+    <!-- HEADER DE NAVEGACIÓN -->
+    <header class="sticky top-0 z-50 bg-flechazo-dark/90 backdrop-blur-md border-b-2 border-flechazo-gold/40 px-4 lg:px-8 py-3 transition-all duration-300">
+        <div class="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
+            
+            <!-- LOGO -->
+            <div class="flex items-center gap-3 cursor-pointer group" onclick="switchTab('inicio')">
+                <div class="relative w-12 h-12 flex items-center justify-center rounded-full bg-gradient-to-tr from-flechazo-red via-flechazo-gold to-flechazo-pink p-0.5 shadow-gold-glow group-hover:scale-105 transition-transform">
+                    <div class="w-full h-full bg-flechazo-dark rounded-full flex items-center justify-center relative">
+                        <i class="fa-solid fa-heart text-flechazo-red text-xl group-hover:text-flechazo-pink transition-colors"></i>
+                        <i class="fa-solid fa-location-arrow text-flechazo-gold text-xs absolute -rotate-45"></i>
+                    </div>
+                </div>
+                <div>
+                    <span class="text-2xl font-black tracking-widest text-white uppercase font-serif">FLECHA<span class="text-flechazo-red font-sans">ZO</span></span>
+                    <span class="block text-[10px] tracking-[0.25em] text-flechazo-gold uppercase font-semibold">Club de Solteros</span>
+                </div>
+            </div>
+
+            <!-- NAVEGACIÓN CLIENTE -->
+            <nav id="nav-cliente" class="flex flex-wrap justify-center items-center gap-1 sm:gap-2 text-xs sm:text-sm font-semibold">
+                <button onclick="switchTab('inicio')" id="tab-inicio" class="nav-btn px-3 py-2 rounded-lg transition-all flex items-center gap-2 text-flechazo-gold border border-flechazo-gold/40 bg-flechazo-gold/10 font-bold shadow-gold-glow">
+                    <i class="fa-solid fa-house"></i> <span>Inicio</span>
+                </button>
+                <button onclick="switchTab('registro')" id="tab-registro" class="nav-btn px-3 py-2 rounded-lg transition-all flex items-center gap-2 text-gray-400 hover:text-white hover:bg-white/5">
+                    <i class="fa-solid fa-user-plus"></i> <span>Registrarse</span>
+                </button>
+                <button onclick="switchTab('explorar')" id="tab-explorar" class="nav-btn px-3 py-2 rounded-lg transition-all flex items-center gap-2 text-gray-400 hover:text-white hover:bg-white/5">
+                    <i class="fa-solid fa-compass"></i> <span>Explorar Solteros</span>
+                </button>
+                <button onclick="switchTab('flechazos')" id="tab-flechazos" class="nav-btn px-3 py-2 rounded-lg transition-all flex items-center gap-2 text-gray-400 hover:text-white hover:bg-white/5 relative">
+                    <i class="fa-solid fa-heart-circle-bolt text-flechazo-red"></i> <span>Mis Flechazos</span>
+                    <span id="badge-matches" class="bg-flechazo-red text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full hidden">0</span>
+                </button>
+                <button onclick="switchTab('mensajes')" id="tab-mensajes" class="nav-btn px-3 py-2 rounded-lg transition-all flex items-center gap-2 text-gray-400 hover:text-white hover:bg-white/5 relative">
+                    <i class="fa-solid fa-comments"></i> <span>Mensajes</span>
+                </button>
+            </nav>
+
+            <!-- NAVEGACIÓN ADMINISTRADOR -->
+            <nav id="nav-admin" class="flex-wrap justify-center items-center gap-2 text-xs sm:text-sm font-semibold hidden">
+                <button onclick="showAdminTab('admin-dashboard')" id="tab-admin-dashboard" class="px-3 py-2 rounded-lg bg-blue-600/20 text-blue-400 border border-blue-500/40 font-bold">
+                    <i class="fa-solid fa-chart-pie me-1"></i> Dashboard
+                </button>
+                <button onclick="showAdminTab('admin-usuarios')" id="tab-admin-usuarios" class="px-3 py-2 rounded-lg text-gray-400 hover:text-white hover:bg-white/5">
+                    <i class="fa-solid fa-users-gear me-1"></i> Usuarios DB
+                </button>
+                <button onclick="showAdminTab('admin-reportes')" id="tab-admin-reportes" class="px-3 py-2 rounded-lg text-gray-400 hover:text-white hover:bg-white/5">
+                    <i class="fa-solid fa-file-invoice-dollar me-1"></i> Suscripciones
+                </button>
+            </nav>
+
+            <!-- SELECTOR DE ROL DE ACCESO -->
+            <div class="bg-black/60 border border-flechazo-gold/40 rounded-xl px-3 py-1.5 flex items-center gap-2">
+                <span class="text-xs text-flechazo-gold font-semibold"><i class="fa-solid fa-user-shield me-1"></i>Vista:</span>
+                <select id="role-select" onchange="switchRole(this.value)" class="bg-transparent text-xs text-white font-bold outline-none cursor-pointer">
+                    <option value="cliente" class="bg-flechazo-dark text-white">👤 Cliente (Soltero)</option>
+                    <option value="admin" class="bg-flechazo-dark text-blue-400">🔑 Administrador</option>
+                </select>
+            </div>
+
+        </div>
+    </header>
+
+    <!-- CONTENIDO PRINCIPAL -->
+    <main class="flex-grow max-w-7xl w-full mx-auto p-4 sm:p-6 lg:p-8 z-10 relative">
+
+        <!-- ================= VISTA CLIENTE ================= -->
+        <div id="portal-cliente">
+            <!-- PESTAÑA 1: INICIO -->
+            <section id="sec-inicio" class="space-y-12">
+                <div class="text-center py-16 space-y-6 relative">
+                    <div class="inline-block relative">
+                        <i class="fa-solid fa-heart text-flechazo-red text-6xl heart-float opacity-80 mb-2"></i>
+                        <h1 class="text-5xl sm:text-7xl font-black font-serif text-transparent bg-clip-text bg-gradient-to-r from-white via-flechazo-goldLight to-flechazo-gold tracking-tight">
+                            FLECHAZO
+                        </h1>
+                        <p class="text-xs sm:text-sm font-semibold tracking-[0.4em] text-flechazo-gold uppercase mt-2">Club Exclusivo de Solteros</p>
+                    </div>
+
+                    <p class="max-w-2xl mx-auto text-gray-300 text-base sm:text-lg leading-relaxed">
+                        Conecta con personas auténticas que buscan relaciones serias, experiencias inolvidables y momentos mágicos.
+                    </p>
+
+                    <div class="flex flex-wrap justify-center gap-4 pt-4">
+                        <button onclick="switchTab('registro')" class="btn-pulse px-8 py-4 rounded-full bg-gradient-to-r from-flechazo-red via-flechazo-pink to-flechazo-red text-white font-bold text-sm tracking-widest uppercase border border-flechazo-gold shadow-red-glow hover:scale-105 transition-all">
+                            ✨ Unirme al Club
+                        </button>
+                        <button onclick="switchTab('explorar')" class="px-8 py-4 rounded-full bg-flechazo-card text-flechazo-gold border border-flechazo-gold/50 hover:bg-flechazo-gold/10 font-bold text-sm tracking-widest uppercase transition-all">
+                            Explorar Perfiles
+                        </button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- PESTAÑA 2: REGISTRO CLIENTE -->
+            <section id="sec-registro" class="hidden max-w-2xl mx-auto">
+                <div class="bg-flechazo-card p-6 sm:p-8 rounded-3xl border border-flechazo-gold/40 shadow-gold-glow space-y-6">
+                    <div class="text-center space-y-2">
+                        <h2 class="text-2xl font-bold font-serif text-white">Registro de Soltero/a</h2>
+                        <p class="text-xs text-flechazo-gold">Crea tu perfil en el club y encuentra tu flechazo</p>
+                    </div>
+
+                    <form id="form-registro" onsubmit="guardarRegistro(event)" class="space-y-4 text-xs">
+                        <div class="space-y-1">
+                            <label class="text-gray-300 font-semibold">Nombre Completo</label>
+                            <input type="text" id="reg-nombre" required placeholder="Ej. Carlos Mendoza" class="w-full bg-black/50 border border-gray-700 focus:border-flechazo-gold rounded-xl p-3 text-white outline-none">
+                        </div>
+
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <div class="space-y-1">
+                                <label class="text-gray-300 font-semibold">Correo Electrónico</label>
+                                <input type="email" id="reg-email" required placeholder="carlos@correo.com" class="w-full bg-black/50 border border-gray-700 focus:border-flechazo-gold rounded-xl p-3 text-white outline-none">
+                            </div>
+                            <div class="space-y-1">
+                                <label class="text-gray-300 font-semibold">Contraseña</label>
+                                <input type="password" id="reg-password" required placeholder="••••••••" class="w-full bg-black/50 border border-gray-700 focus:border-flechazo-gold rounded-xl p-3 text-white outline-none">
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                            <div class="space-y-1">
+                                <label class="text-gray-300 font-semibold">Teléfono</label>
+                                <input type="tel" id="reg-telefono" required placeholder="+51 987654321" class="w-full bg-black/50 border border-gray-700 focus:border-flechazo-gold rounded-xl p-3 text-white outline-none">
+                            </div>
+                            <div class="space-y-1">
+                                <label class="text-gray-300 font-semibold">F. Nacimiento</label>
+                                <input type="date" id="reg-nacimiento" required class="w-full bg-black/50 border border-gray-700 focus:border-flechazo-gold rounded-xl p-3 text-white outline-none">
+                            </div>
+                            <div class="space-y-1">
+                                <label class="text-gray-300 font-semibold">Género</label>
+                                <select id="reg-genero" required class="w-full bg-black/50 border border-gray-700 focus:border-flechazo-gold rounded-xl p-3 text-white outline-none">
+                                    <option value="Masculino">Masculino</option>
+                                    <option value="Femenino">Femenino</option>
+                                    <option value="Otro">Otro</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <div class="space-y-1">
+                                <label class="text-gray-300 font-semibold">Ciudad</label>
+                                <input type="text" id="reg-ciudad" required placeholder="Lima, Cusco..." class="w-full bg-black/50 border border-gray-700 focus:border-flechazo-gold rounded-xl p-3 text-white outline-none">
+                            </div>
+                            <div class="space-y-1">
+                                <label class="text-gray-300 font-semibold">Ocupación</label>
+                                <input type="text" id="reg-ocupacion" placeholder="Ej. Diseñador, Médico..." class="w-full bg-black/50 border border-gray-700 focus:border-flechazo-gold rounded-xl p-3 text-white outline-none">
+                            </div>
+                        </div>
+
+                        <div class="space-y-1">
+                            <label class="text-gray-300 font-semibold">Sobre ti (Descripción de Perfil)</label>
+                            <textarea id="reg-descripcion" rows="3" placeholder="Intereses, pasatiempos, qué buscas en la pareja ideal..." class="w-full bg-black/50 border border-gray-700 focus:border-flechazo-gold rounded-xl p-3 text-white outline-none"></textarea>
+                        </div>
+
+                        <!-- Preferencias -->
+                        <div class="p-4 rounded-2xl bg-black/30 border border-flechazo-gold/20 space-y-3">
+                            <span class="font-bold text-flechazo-gold uppercase text-[10px] tracking-wider block">Preferencias de Búsqueda</span>
+                            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                                <div>
+                                    <label class="text-[10px] text-gray-400">Interesado en</label>
+                                    <select id="reg-interes" class="w-full bg-black/60 border border-gray-700 rounded-lg p-2 text-white">
+                                        <option value="Mujeres">Mujeres</option>
+                                        <option value="Hombres">Hombres</option>
+                                        <option value="Ambos">Ambos</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="text-[10px] text-gray-400">Edad Min.</label>
+                                    <input type="number" id="reg-edad-min" value="18" min="18" class="w-full bg-black/60 border border-gray-700 rounded-lg p-2 text-white">
+                                </div>
+                                <div>
+                                    <label class="text-[10px] text-gray-400">Edad Max.</label>
+                                    <input type="number" id="reg-edad-max" value="45" max="99" class="w-full bg-black/60 border border-gray-700 rounded-lg p-2 text-white">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Suscripción -->
+                        <div class="space-y-2">
+                            <span class="font-bold text-flechazo-gold uppercase text-[10px] tracking-wider block">Selecciona un Plan</span>
+                            <div class="grid grid-cols-3 gap-2 text-center">
+                                <label class="p-3 rounded-xl border border-gray-700 bg-black/40 cursor-pointer hover:border-flechazo-gold">
+                                    <input type="radio" name="plan" value="Gratuito" checked class="hidden peer">
+                                    <div class="peer-checked:text-flechazo-gold font-bold">Gratuito</div>
+                                    <div class="text-[10px] text-gray-400">S/. 0</div>
+                                </label>
+                                <label class="p-3 rounded-xl border border-gray-700 bg-black/40 cursor-pointer hover:border-flechazo-gold">
+                                    <input type="radio" name="plan" value="VIP" class="hidden peer">
+                                    <div class="peer-checked:text-flechazo-pink font-bold">🔥 VIP</div>
+                                    <div class="text-[10px] text-gray-400">S/. 29/mes</div>
+                                </label>
+                                <label class="p-3 rounded-xl border border-gray-700 bg-black/40 cursor-pointer hover:border-flechazo-gold">
+                                    <input type="radio" name="plan" value="Gold" class="hidden peer">
+                                    <div class="peer-checked:text-flechazo-gold font-bold">⭐ Gold</div>
+                                    <div class="text-[10px] text-gray-400">S/. 49/mes</div>
+                                </label>
+                            </div>
+                        </div>
+
+                        <button type="submit" class="w-full py-4 rounded-xl bg-gradient-to-r from-flechazo-red via-flechazo-pink to-flechazo-red text-white font-bold uppercase tracking-widest text-xs border border-flechazo-gold shadow-red-glow hover:scale-[1.01] transition-transform mt-4">
+                            Completar Registro
+                        </button>
+                    </form>
+                </div>
+            </section>
+
+            <!-- PESTAÑA 3: EXPLORAR SOLTEROS -->
+            <section id="sec-explorar" class="hidden space-y-6">
+                <div class="flex flex-col sm:flex-row justify-between items-center gap-4 bg-flechazo-card p-4 rounded-2xl border border-flechazo-gold/30">
+                    <div>
+                        <h2 class="text-xl font-bold font-serif text-white">Explorar Solteros/as</h2>
+                        <p class="text-xs text-gray-400">Descubre perfiles sugeridos según tu ubicación e intereses</p>
+                    </div>
+                    <div class="flex gap-2 text-xs">
+                        <button onclick="filtrarSolteros('Todos')" class="px-3 py-1.5 rounded-lg bg-flechazo-gold/20 text-flechazo-gold font-bold border border-flechazo-gold/40">Todos</button>
+                        <button onclick="filtrarSolteros('Femenino')" class="px-3 py-1.5 rounded-lg bg-black/40 text-gray-300 hover:text-white border border-gray-800">Mujeres</button>
+                        <button onclick="filtrarSolteros('Masculino')" class="px-3 py-1.5 rounded-lg bg-black/40 text-gray-300 hover:text-white border border-gray-800">Hombres</button>
+                    </div>
+                </div>
+
+                <div id="grid-solteros" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <!-- Se puebla dinámicamente con JS -->
+                </div>
+            </section>
+
+            <!-- PESTAÑA 4: MIS FLECHAZOS -->
+            <section id="sec-flechazos" class="hidden space-y-6 max-w-4xl mx-auto">
+                <div class="bg-flechazo-card p-6 rounded-2xl border border-flechazo-gold/30">
+                    <h2 class="text-2xl font-bold font-serif text-white mb-1"><i class="fa-solid fa-heart-circle-bolt text-flechazo-red me-2"></i>Mis Flechazos e Interacciones</h2>
+                    <p class="text-xs text-gray-400">Historial de me gustas enviados, recibidos y coincidencias mutuas (Matches)</p>
+                </div>
+
+                <div id="lista-flechazos" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <!-- Filas dinámicas -->
+                </div>
+            </section>
+
+            <!-- PESTAÑA 5: MENSAJES DE CHAT -->
+            <section id="sec-mensajes" class="hidden">
+                <div class="bg-flechazo-card rounded-2xl border border-flechazo-gold/30 overflow-hidden grid grid-cols-1 md:grid-cols-3 h-[600px]">
+                    <!-- LISTA CONTACTOS MATCHES -->
+                    <div class="border-r border-gray-800 flex flex-col bg-black/40">
+                        <div class="p-4 border-b border-gray-800">
+                            <h3 class="font-bold text-white text-sm">Mis Matches</h3>
+                            <span class="text-[10px] text-flechazo-gold">Chat Privado del Club</span>
+                        </div>
+                        <div id="chat-users-list" class="flex-grow overflow-y-auto divide-y divide-gray-800/50">
+                            <!-- Lista JS -->
+                        </div>
+                    </div>
+
+                    <!-- CAJA DE MENSAJES -->
+                    <div class="md:col-span-2 flex flex-col h-full bg-flechazo-dark/50">
+                        <div class="p-4 border-b border-gray-800 flex items-center gap-3 bg-black/40">
+                            <div class="w-10 h-10 rounded-full bg-flechazo-gold/20 flex items-center justify-center text-flechazo-gold font-bold" id="chat-avatar">?</div>
+                            <div>
+                                <h4 class="font-bold text-white text-sm" id="chat-user-name">Selecciona un Match</h4>
+                                <span class="text-[10px] text-gray-400" id="chat-user-status">Conversación privada encriptada</span>
+                            </div>
+                        </div>
+
+                        <div id="chat-body" class="flex-grow p-4 overflow-y-auto space-y-3">
+                            <div class="text-center text-gray-500 text-xs py-12">Selecciona un soltero/a con quien tengas match para iniciar el chat.</div>
+                        </div>
+
+                        <form id="chat-form" onsubmit="enviarMensaje(event)" class="p-3 border-t border-gray-800 flex gap-2 bg-black/60">
+                            <input type="text" id="chat-input" disabled placeholder="Escribe un mensaje..." class="flex-grow bg-black/60 border border-gray-700 rounded-xl px-4 py-2 text-xs text-white outline-none focus:border-flechazo-gold">
+                            <button type="submit" id="chat-btn-send" disabled class="px-5 py-2 bg-flechazo-red hover:bg-flechazo-pink disabled:bg-gray-800 text-white rounded-xl text-xs font-bold transition-all">
+                                <i class="fa-solid fa-paper-plane"></i>
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </section>
+        </div>
+
+        <!-- ================= VISTA ADMINISTRADOR ================= -->
+        <div id="portal-admin" class="hidden space-y-8">
+            <!-- ADMIN: DASHBOARD -->
+            <section id="sec-admin-dashboard" class="space-y-6">
+                <div class="bg-flechazo-card p-6 rounded-2xl border border-blue-500/40">
+                    <h2 class="text-2xl font-bold font-serif text-white mb-1"><i class="fa-solid fa-chart-line text-blue-400 me-2"></i>Panel de Control Administrador</h2>
+                    <p class="text-xs text-gray-400">Métricas clave e indicadores de rendimiento de FLECHAZO</p>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-6">
+                    <div class="bg-flechazo-card p-6 rounded-2xl border border-blue-500/20 flex flex-col items-center justify-center text-center">
+                        <i class="fa-solid fa-users text-3xl text-blue-400 mb-2"></i>
+                        <span class="text-xs text-gray-400 font-semibold uppercase">Total Solteros</span>
+                        <span class="text-4xl font-extrabold text-white mt-1" id="kpi-usuarios">0</span>
+                    </div>
+                    <div class="bg-flechazo-card p-6 rounded-2xl border border-flechazo-red/30 flex flex-col items-center justify-center text-center">
+                        <i class="fa-solid fa-heart-circle-bolt text-3xl text-flechazo-red mb-2"></i>
+                        <span class="text-xs text-gray-400 font-semibold uppercase">Matches Exitosos</span>
+                        <span class="text-4xl font-extrabold text-white mt-1" id="kpi-matches">0</span>
+                    </div>
+                    <div class="bg-flechazo-card p-6 rounded-2xl border border-flechazo-gold/30 flex flex-col items-center justify-center text-center">
+                        <i class="fa-solid fa-crown text-3xl text-flechazo-gold mb-2"></i>
+                        <span class="text-xs text-gray-400 font-semibold uppercase">Suscripciones de Pago</span>
+                        <span class="text-4xl font-extrabold text-white mt-1" id="kpi-suscripciones">0</span>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ADMIN: GESTIÓN DE USUARIOS DE BASE DE DATOS -->
+            <section id="sec-admin-usuarios" class="hidden space-y-4">
+                <div class="bg-flechazo-card p-6 rounded-2xl border border-blue-500/40 flex justify-between items-center">
+                    <div>
+                        <h2 class="text-2xl font-bold font-serif text-white mb-1">Gestión de Usuarios (Tabla: `usuarios`)</h2>
+                        <p class="text-xs text-gray-400">Administra el estado y los perfiles de la plataforma</p>
+                    </div>
+                </div>
+
+                <div class="bg-flechazo-card rounded-2xl border border-gray-800 overflow-x-auto">
+                    <table class="w-full text-left text-xs text-gray-300">
+                        <thead class="bg-black/40 text-flechazo-gold uppercase text-[10px] tracking-wider border-b border-gray-800">
+                            <tr>
+                                <th class="p-4">ID</th>
+                                <th class="p-4">Usuario</th>
+                                <th class="p-4">Email</th>
+                                <th class="p-4">Ciudad</th>
+                                <th class="p-4">Plan</th>
+                                <th class="p-4">Estado</th>
+                                <th class="p-4 text-center">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody id="admin-tabla-usuarios" class="divide-y divide-gray-800/60">
+                            <!-- Filas dinámicas por JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- ADMIN: SUSCRIPCIONES Y PAGOS -->
+            <section id="sec-admin-reportes" class="hidden space-y-4">
+                <div class="bg-flechazo-card p-6 rounded-2xl border border-blue-500/40">
+                    <h2 class="text-2xl font-bold font-serif text-white mb-1">Reporte de Membresías (Tabla: `suscripciones`)</h2>
+                    <p class="text-xs text-gray-400">Planes activos dentro del club de solteros</p>
+                </div>
+
+                <div class="bg-flechazo-card rounded-2xl border border-gray-800 overflow-x-auto">
+                    <table class="w-full text-left text-xs text-gray-300">
+                        <thead class="bg-black/40 text-flechazo-gold uppercase text-[10px] tracking-wider border-b border-gray-800">
+                            <tr>
+                                <th class="p-4">ID Suscripción</th>
+                                <th class="p-4">Usuario ID</th>
+                                <th class="p-4">Tipo Plan</th>
+                                <th class="p-4">Fecha Inicio</th>
+                                <th class="p-4">Estado Pago</th>
+                            </tr>
+                        </thead>
+                        <tbody id="admin-tabla-suscripciones" class="divide-y divide-gray-800/60">
+                            <!-- Filas dinámicas por JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+        </div>
+
+    </main>
+
+    <!-- MODAL POPUP FLECHAZO MUTUO (MATCH) -->
+    <div id="modal-match" class="fixed inset-0 bg-black/80 backdrop-blur-md z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-flechazo-card border-2 border-flechazo-gold p-8 rounded-3xl max-w-md w-full text-center space-y-6 relative shadow-gold-glow">
+            <i class="fa-solid fa-heart-circle-bolt text-flechazo-red text-6xl heart-float"></i>
+            <h3 class="text-3xl font-bold font-serif text-white">¡ES UN FLECHAZO! ❤️</h3>
+            <p class="text-sm text-gray-300">Tú y <span id="modal-match-name" class="font-bold text-flechazo-gold">alguien</span> se han gustado mutuamente.</p>
+            <div class="flex gap-4">
+                <button onclick="cerrarModalMatch(); switchTab('mensajes')" class="flex-1 py-3 bg-flechazo-red text-white font-bold rounded-xl text-xs uppercase tracking-wider shadow-red-glow">Enviar Mensaje</button>
+                <button onclick="cerrarModalMatch()" class="flex-1 py-3 bg-black/60 border border-gray-700 text-gray-300 font-bold rounded-xl text-xs uppercase">Seguir Explorando</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- FOOTER -->
+    <footer class="bg-black/80 border-t border-gray-800/80 py-6 text-center text-xs text-gray-500 z-10 relative">
+        <p>&copy; 2026 FLECHAZO - Club de Solteros. Todos los derechos reservados.</p>
+    </footer>
+
+    <!-- LÓGICA JAVASCRIPT SEPARADA -->
+    <script src="script.js"></script>
+</body>
+</html>
